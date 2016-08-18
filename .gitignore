@@ -1,4 +1,7 @@
+# Manually added
 .idea
+.env
+routes.json
 
 # Created by https://www.gitignore.io/api/windows,osx,linux,node,webstorm
 
