@@ -1,0 +1,31 @@
+{
+  "private": true,
+  "name": "formio-sql",
+  "version": "0.0.1",
+  "description": "The Form.io wrapper around Resquel",
+  "main": "index.js",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "dotenv": "^2.0.0",
+    "express": "^4.14.0",
+    "lodash": "^4.15.0",
+    "q": "^1.4.1",
+    "resquel": "^0.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.3.1",
+    "eslint-config-formio": "^1.1.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "resquel",
+    "formio",
+    "sql"
+  ],
+  "author": "Zack Urben",
+  "license": "UNLICENSED"
+}
