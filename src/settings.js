@@ -43,7 +43,7 @@ module.exports = function() {
     first = 'env.' + first.toString().toUpperCase();
 
     // Search the user defined settings.
-    var temp = _.get(settings, first);
+    var temp = _.get(process, first);
     debug.pluck(first + ': ' + temp);
 
     // If fallback was disabled, return the original results.
