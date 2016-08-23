@@ -8,7 +8,7 @@ var debug = {
 };
 
 // The required settings, which will stop the server from starting.
-var required = ['project', 'type', 'db.server'];
+var required = ['formio.project', 'formio.key', 'type', 'db.server'];
 
 module.exports = function() {
   var settings = {};
@@ -63,12 +63,16 @@ module.exports = function() {
 
   // Build the settings with the plucked properties.
   settings = {
-    project: pluck('project', false),
     port: pluck('port'),
     type: pluck('type'),
     db: {
       server: pluck('db_server', 'db.server'),
-      user: pluck('db_user', 'db.user')
+      user: pluck('db_user', 'db.user'),
+      database: pluck('db_database', 'db.database')
+    },
+    formio: {
+      project: pluck('formio_project', 'formio.project'),
+      key: pluck('formio_key', 'formio.key')
     }
   };
   debug.settings(settings);

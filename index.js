@@ -4,9 +4,11 @@
 require('dotenv').config({silent: true});
 var settings = require('./src/settings')();
 var routes = require('./src/routes')(settings);
+var formio = require('./src/formio')(settings);
 var _ = require('lodash');
 var resquel = require('resquel');
 var express = require('express');
+var Q = require('q');
 
 // Create our app.
 var app = express();
@@ -14,10 +16,25 @@ var app = express();
 // Gather the Resquel specific settings.
 var config = _.pick(settings, ['db', 'type', 'auth']);
 
-routes.loadRoutes()
+Q()
+  .then(formio.getRoutes)
   .then(function(routes) {
-    // Mount the loaded routes
-    config.routes = routes;
+    if (routes && typeof routes === 'string') {
+      try {
+        routes = JSON.parse(routes);
+      }
+      catch (e) {
+        throw e;
+      }
+    }
+
+    // Mount the loaded routes.
+    config.routes = routes || [];
+  })
+  .then(routes.loadRoutes)
+  .then(function(routes) {
+    // modify the loaded routes, with the local routes.
+    config.routes = config.routes.concat(routes);
 
     // Mount Resquel and continue.
     app.use(resquel(config));
