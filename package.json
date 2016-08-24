@@ -5,6 +5,7 @@
   "description": "The Form.io wrapper around Resquel",
   "main": "index.js",
   "dependencies": {
+    "cors": "^2.8.0",
     "debug": "^2.2.0",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",

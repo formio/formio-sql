@@ -9,9 +9,14 @@ var _ = require('lodash');
 var resquel = require('resquel');
 var express = require('express');
 var Q = require('q');
+var cors = require ('cors');
 
 // Create our app.
 var app = express();
+
+// TODO configure domains via settings.
+// use cors.
+app.use(cors());
 
 // Gather the Resquel specific settings.
 var config = _.pick(settings, ['db', 'type', 'auth']);
