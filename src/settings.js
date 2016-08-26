@@ -73,6 +73,10 @@ module.exports = function() {
     formio: {
       project: pluck('formio_project', 'formio.project'),
       key: pluck('formio_key', 'formio.key')
+    },
+    auth: {
+      username: pluck('auth_username'),
+      password: pluck('auth_password')
     }
   };
   debug.settings(settings);
