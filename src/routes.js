@@ -25,7 +25,7 @@ module.exports = function(settings) {
     });
 
     if (invalid.length !== 0) {
-      throw new Error('Some invalid routes exist, please fix them before proceeding. \n' + JSON.stringify(invalid))
+      throw new Error('Some invalid routes exist, please fix them before proceeding. \n' + JSON.stringify(invalid));
     }
 
     return Q(routes);

@@ -9,7 +9,7 @@ var _ = require('lodash');
 var resquel = require('resquel');
 var express = require('express');
 var Q = require('q');
-var cors = require ('cors');
+var cors = require('cors');
 
 // Create our app.
 var app = express();
@@ -46,7 +46,7 @@ Q()
     app.listen(settings.port);
   })
   .catch(function(err) {
-    console.error(err);
+    console.error(err); // eslint-disable-line no-console
     process.exit(1);
   })
   .done();

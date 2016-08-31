@@ -26,5 +26,5 @@ module.exports = function(settings) {
 
   return {
     getRoutes: getRoutes
-  }
+  };
 };

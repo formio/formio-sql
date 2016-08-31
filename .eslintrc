@@ -1,0 +1,8 @@
+{
+  "root": true,
+  "extends": "eslint-config-formio",
+  "env": {
+    "node": true
+  },
+  "rules": {}
+}

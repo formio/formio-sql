@@ -90,7 +90,7 @@ module.exports = function() {
   });
 
   if (missing.length !== 0) {
-    console.error('The following settings are required, but were not found: ' + missing.join(', '));
+    console.error('The following settings are required, but were not found: ' + missing.join(', ')); // eslint-disable-line no-console
     process.exit(1);
   }
 
