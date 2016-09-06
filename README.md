@@ -6,7 +6,7 @@ are dynamically generated along with the SQL code to allow you to create forms i
 the contents automatically inserted into your SQL Database using field mapping within the SQL Connector Form Action.
 Please go to https://form.io to learn more.
 
-**This library currently supports Microsoft SQL Server and MySQL.**
+**This library currently supports Microsoft SQL Server, MySQL, and PostgreSQL.**
 
 All the settings of this library are controlled via environment variables, which may be manually added to the start
 command, e.g. `SETTING=something npm start`, or you can configure the `.env` file. To configure the `.env` file, copy
