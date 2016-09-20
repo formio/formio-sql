@@ -8,6 +8,29 @@ Please go to https://form.io to learn more.
 
 **This library currently supports Microsoft SQL Server, MySQL, and PostgreSQL.**
 
+# Getting Started
+To get started with a new formio-sql server:
+
+ 1. Clone this repo
+ 2. Copy the contents of `.env.example` to `.env`
+ 3. Update the contents of `TYPE`, `DB_SERVER`, `DB_USER`, `DB_DATABASE` to match your SQL instance.
+ 4. Select the `PORT` you want to run your `formio-sql` instance on
+ 5. Create a API Key on your Form.io Project for the `FORMIO_KEY`
+ 6. Configure your Form.io Project settings, to have a SQL Connector Data Connection
+ ![](/formio-sql1.png)
+ 7. Configure a Form to have the SQL Connector action, and configure the mappings
+ ![](/formio-sql2.png)
+ 8. Start your formio-sql server, which will dynamically connect your server to your Form.io Forms, so all submissions
+    will be stored in your connected database.
+
+# Requirements
+The following items are required to use the formio-sql server.
+
+ 1. A Form.io Project on the Team Pro or Commercial Plan
+ 2. A Node.js LTS Server, 4.x.x
+ 3. A MySQL/Microsoft SQL/PostgreSQL server (only one)
+
+## Extra
 All the settings of this library are controlled via environment variables, which may be manually added to the start
 command, e.g. `SETTING=something npm start`, or you can configure the `.env` file. To configure the `.env` file, copy
 the `.env.example` file to `.env` and add your settings.
