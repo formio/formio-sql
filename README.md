@@ -42,6 +42,7 @@ the `.env.example` file to `.env` and add your settings.
 | PORT | 3000 | yes | The port this express server will run on. |
 | TYPE | mysql | yes | The type of SQL syntax to use. |
 | DB_SERVER | localhost | yes | The SQL database host to use. |
+| DB_PORT | | no | The SQL database Port to use. |
 | DB_USER | root | no | The SQL database user to use. |
 | DB_PASSWORD | | no | The SQL database password to use. |
 | DB_DATABASE | formiosql | yes | The SQL database user to use. |

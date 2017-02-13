@@ -69,7 +69,8 @@ module.exports = function() {
       server: pluck('db_server', 'db.server'),
       user: pluck('db_user', 'db.user'),
       password: pluck('db_password'),
-      database: pluck('db_database', 'db.database')
+      database: pluck('db_database', 'db.database'),
+      port: pluck('db_port', 'db.port')
     },
     formio: {
       project: pluck('formio_project', 'formio.project'),
