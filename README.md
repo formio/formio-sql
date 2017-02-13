@@ -59,7 +59,7 @@ Upon running the formio-sql server, it will authenticate to your Form.io project
 Connector routes, so anytime the SQLConnector action is changed on Form.io, this server will need to be restarted to get
 the updated routes.
 
-If you are not using a Form.io project, check out [https://github.com/formio/resquel](Resquel).
+If you are not using a Form.io project, check out [Resquel](https://github.com/formio/resquel).
 
 Enjoy!
 
