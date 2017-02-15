@@ -50,6 +50,17 @@ the `.env.example` file to `.env` and add your settings.
 | FORMIO_PROJECT | | yes | The Project _id for your Form.io Project. |
 | AUTH_USERNAME | | no | A Random username required to access this Server for Basic Auth, also used in the Form.io Project settings for SQL Connector. |
 | AUTH_PASSWORD | | no | A Random password required to access this Server for Basic Auth, also used in the Form.io Project settings for SQL Connector. |
+| LEGACY | | no | Override legacy support. Useful if you don't make a config.json file, and don't want to use defaults.json |
+
+## Backwards Compatibility
+This library originally used a defaults.json file. That has been deprecated in favor of config.json. You can copy use
+config.json.example as a template, and add/remove any settings you want.
+
+The db settings in config.json are used as a template, so any additional database settings will be passed on to the
+underlying libraries for extended functionality.
+
+If you want don't want to create a config.json, it is recommended that you add the env variable LEGACY=false, to force
+the settings logic to use the expanded functionality.
 
 ## Routes
 The routes are primarily generated on Form.io, but can also be added manually. Adding custom routes to `routes.json`
