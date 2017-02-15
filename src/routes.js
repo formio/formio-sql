@@ -32,7 +32,15 @@ module.exports = function(settings) {
   };
 
   var loadRoutes = function() {
-    var routes = require('../routes.json');
+    var routes;
+    try {
+      routes = require('../routes.json');
+    }
+    catch (e) {
+      console.warn(e.message);
+      console.warn('Ignoring routes file..');
+      routes = [];
+    }
     debug.loadRoutes(routes);
     return Q.fcall(filterInvalidRoutes, routes);
   };
