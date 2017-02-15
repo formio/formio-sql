@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "formio-sql",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "The Form.io wrapper around Resquel",
   "main": "index.js",
   "dependencies": {
