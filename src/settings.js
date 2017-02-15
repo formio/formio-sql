@@ -19,8 +19,13 @@ module.exports = function() {
     config = require('../config.json');
   }
   catch (err) {
-    console.error('No');
     legacy = true;
+
+    if (_.has(process.env, 'LEGACY') && _.get(process.env, 'LEGACY') == 'false') {
+      legacy = false;
+    }
+
+    debug.settings('Legacy: ', legacy);
   }
 
   /**
@@ -110,12 +115,13 @@ module.exports = function() {
       process.exit(1);
     }
 
+    debug.settings(settings);
     return settings;
   }
 
   // New settings options, which are more flexible.
   // Use the config.json data as the root configuration
-  settings = config;
+  settings = config || {};
 
   var proc = function(key) {
     return _.get(process.env, key);
@@ -140,5 +146,6 @@ module.exports = function() {
   add('FORMIO_KEY', 'formio.key');
   add('FORMIO_PROJECT', 'formio.project');
 
+  debug.settings(settings);
   return settings;
 };
