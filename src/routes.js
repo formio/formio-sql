@@ -37,7 +37,7 @@ module.exports = function(settings) {
       routes = require('../routes.json');
     }
     catch (e) {
-      console.warn(e);
+      console.warn(e.message);
       console.warn('Ignoring routes file..');
       routes = [];
     }

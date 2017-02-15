@@ -138,6 +138,7 @@ module.exports = function() {
   add('PORT');
   add('TYPE');
   add('DB_SERVER', 'db.server');
+  add('DB_PORT', 'db.port');
   add('DB_USER', 'db.user');
   add('DB_PASSWORD', 'db.password');
   add('DB_DATABASE', 'db.database');

@@ -10,6 +10,9 @@ var resquel = require('resquel');
 var express = require('express');
 var Q = require('q');
 var cors = require('cors');
+var debug = {
+  routes: require('debug')('formio-sql:routes')
+};
 
 // Create our app.
 var app = express();
@@ -40,10 +43,15 @@ Q()
   .then(function(routes) {
     // modify the loaded routes, with the local routes.
     config.routes = config.routes.concat(routes);
+    debug.routes(config.routes)
 
     // Mount Resquel and continue.
     app.use(resquel(config));
     app.listen(settings.port);
+    console.log('Serving the SQL Connector on port ', settings.port, '\n');
+    _.each(config.routes, function(route) {
+      console.log(_.padStart('[' + route.method.toString().toUpperCase() + '] ', 10) + route.endpoint);
+    });
   })
   .catch(function(err) {
     console.error(err); // eslint-disable-line no-console
