@@ -40,7 +40,7 @@ the `.env.example` file to `.env` and add your settings.
 | Setting | Default | Required | Purpose |
 |---------|---------|----------|---------|
 | PORT | 3000 | yes | The port this express server will run on. |
-| TYPE | mysql | yes | The type of SQL syntax to use. |
+| TYPE | mysql | yes | The type of SQL syntax to use (mysql, mssql, postgresql). |
 | DB_SERVER | localhost | yes | The SQL database host to use. |
 | DB_PORT | | no | The SQL database Port to use. |
 | DB_USER | root | no | The SQL database user to use. |
