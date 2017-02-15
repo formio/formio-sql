@@ -13,7 +13,19 @@ var required = ['formio.project', 'formio.key', 'type', 'db.server'];
 module.exports = function() {
   var settings = {};
 
+  var config;
+  var legacy = false;
+  try {
+    config = require('../config.json');
+  }
+  catch (err) {
+    console.error('No');
+    legacy = true;
+  }
+
   /**
+   * LEGACY
+   *
    * Simple util to pluck settings from env or the defaults.
    *
    * NOTE: All vars in .env must be UPPERCASE.
@@ -61,40 +73,72 @@ module.exports = function() {
     return temp;
   };
 
-  // Build the settings with the plucked properties.
-  settings = {
-    port: pluck('port'),
-    type: pluck('type'),
-    db: {
-      server: pluck('db_server', 'db.server'),
-      user: pluck('db_user', 'db.user'),
-      password: pluck('db_password'),
-      database: pluck('db_database', 'db.database'),
-      port: pluck('db_port', 'db.port')
-    },
-    formio: {
-      project: pluck('formio_project', 'formio.project'),
-      key: pluck('formio_key', 'formio.key')
-    },
-    auth: {
-      username: pluck('auth_username'),
-      password: pluck('auth_password')
+  // The legacy configuration stuff.
+  if (legacy === true) {
+    // Build the settings with the plucked properties.
+    settings = {
+      port: pluck('port'),
+      type: pluck('type'),
+      db: {
+        server: pluck('db_server', 'db.server'),
+        user: pluck('db_user', 'db.user'),
+        password: pluck('db_password'),
+        database: pluck('db_database', 'db.database'),
+        port: pluck('db_port', 'db.port')
+      },
+      formio: {
+        project: pluck('formio_project', 'formio.project'),
+        key: pluck('formio_key', 'formio.key')
+      },
+      auth: {
+        username: pluck('auth_username'),
+        password: pluck('auth_password')
+      }
+    };
+    debug.settings(settings);
+
+    // Iterate all required fields, and notify the user of all missing fields.
+    var missing = [];
+    required.forEach(function(setting) {
+      if (!_.has(settings, setting) || _.get(settings, setting) === undefined) {
+        missing.push(setting);
+      }
+    });
+
+    if (missing.length !== 0) {
+      console.error('The following settings are required, but were not found: ' + missing.join(', ')); // eslint-disable-line no-console
+      process.exit(1);
+    }
+
+    return settings;
+  }
+
+  // New settings options, which are more flexible.
+  // Use the config.json data as the root configuration
+  settings = config;
+
+  var proc = function(key) {
+    return _.get(process.env, key);
+  };
+
+  var add = function(key, prop) {
+    prop = prop || key.toString().toLowerCase();
+
+    if (_.has(process.env, key)) {
+      _.set(settings, prop, proc(key));
     }
   };
-  debug.settings(settings);
 
-  // Iterate all required fields, and notify the user of all missing fields.
-  var missing = [];
-  required.forEach(function(setting) {
-    if (!_.has(settings, setting) || _.get(settings, setting) === undefined) {
-      missing.push(setting);
-    }
-  });
-
-  if (missing.length !== 0) {
-    console.error('The following settings are required, but were not found: ' + missing.join(', ')); // eslint-disable-line no-console
-    process.exit(1);
-  }
+  add('PORT');
+  add('TYPE');
+  add('DB_SERVER', 'db.server');
+  add('DB_USER', 'db.user');
+  add('DB_PASSWORD', 'db.password');
+  add('DB_DATABASE', 'db.database');
+  add('AUTH_USERNAME', 'auth.username');
+  add('AUTH_PASSWORD', 'auth.password');
+  add('FORMIO_KEY', 'formio.key');
+  add('FORMIO_PROJECT', 'formio.project');
 
   return settings;
 };
