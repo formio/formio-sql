@@ -12,7 +12,7 @@
     "lodash": "^4.15.0",
     "q": "^1.4.1",
     "request": "^2.74.0",
-    "resquel": "^0.3.0"
+    "resquel": "^1.0.0"
   },
   "devDependencies": {
     "eslint": "^3.3.1",
