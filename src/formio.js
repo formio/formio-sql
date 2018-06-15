@@ -10,8 +10,10 @@ module.exports = function(settings) {
 
     request({
       method: 'GET',
-      headers: {},
-      url: settings.formio.project + '/sqlconnector?token=' + settings.formio.key
+      headers: {
+        'x-token': settings.formio.key
+      },
+      url: settings.formio.project + '/sqlconnector'
     }, function(error, response, body) {
       if (error) {
         q.reject(error);
