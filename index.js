@@ -32,6 +32,7 @@ Q()
         routes = JSON.parse(routes);
       }
       catch (e) {
+        console.error(routes);
         throw e;
       }
     }
