@@ -15,7 +15,7 @@
     "resquel": "^1.0.0"
   },
   "devDependencies": {
-    "eslint": "^3.3.1",
+    "eslint": "^4.18.2",
     "eslint-config-formio": "^1.1.0"
   },
   "scripts": {
