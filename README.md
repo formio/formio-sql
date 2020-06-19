@@ -47,7 +47,7 @@ the `.env.example` file to `.env` and add your settings.
 | DB_PASSWORD | | no | The SQL database password to use. |
 | DB_DATABASE | formiosql | yes | The SQL database user to use. |
 | FORMIO_KEY | | yes | The API key for your Form.io Project. |
-| FORMIO_PROJECT | | yes | The Project _id for your Form.io Project. |
+| FORMIO_PROJECT | | yes | The Project API endpoint for your Form.io Project. |
 | AUTH_USERNAME | | no | A Random username required to access this Server for Basic Auth, also used in the Form.io Project settings for SQL Connector. |
 | AUTH_PASSWORD | | no | A Random password required to access this Server for Basic Auth, also used in the Form.io Project settings for SQL Connector. |
 | LEGACY | | no | Override legacy support. Useful if you don't make a config.json file, and don't want to use defaults.json |
