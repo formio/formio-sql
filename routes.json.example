@@ -1,7 +1,0 @@
-[
-  {
-    "method": "get",
-    "endpoint": "/example",
-    "query": "-- long sql query here --"
-  }
-]

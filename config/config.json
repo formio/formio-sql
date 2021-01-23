@@ -1,0 +1,29 @@
+{
+  "$schema": "../schemas/config.json",
+  "port": 3000,
+  "db": {
+    "default": {
+      "type": "mysql",
+      "server": "localhost",
+      "port": 3306,
+      "user": "root",
+      "password": "password"
+    }
+  },
+  "auth": {
+    "username": "optional",
+    "password": "optional"
+  },
+  "formio": {
+    "key": "required",
+    "project": "required"
+  },
+  "routes": [
+    {
+      "method": "delete",
+      "endpoint": "/:customerId",
+      "query": "SELECT * FROM customers WHERE id={{ params.customerId }}",
+      "db": "aaa"
+    }
+  ]
+}
