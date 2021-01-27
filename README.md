@@ -49,7 +49,7 @@ The following items are required to use the **formio-sql** server.
 
  1. A Form.io Project on the Team Pro or Commercial Plan
  2. A Node.js LTS Server, `4.x.x` or higher
- 3. A MySQL/Microsoft SQL/PostgreSQL server(s)
+ 3. A MySQL/Microsoft SQL/PostgreSQL compatible server(s)
 
 ## Compatibility
 Version `1.0.0` drops backwards compatibility for `0.1.0` and prior. The move to a prepared query format instead of simple string substitutions fundamentally breaks existing route definitions.

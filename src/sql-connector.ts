@@ -7,7 +7,7 @@ import Knex from 'knex';
 import logger from './log';
 import Resquel from 'resquel';
 import { Request, Response } from 'express';
-import { SQLConnectorConfig, SQLConnectorRoute } from 'config';
+import { SQLConnectorConfig, SQLConnectorRoute } from './config';
 import { v4 as uuid } from 'uuid';
 const configSchema: Dictionary<unknown> = CONFIG;
 

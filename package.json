@@ -3,7 +3,8 @@
   "name": "formio-sql",
   "version": "1.0.0",
   "description": "The Form.io wrapper around Resquel",
-  "main": "src/index.ts",
+  "main": "./lib/src/sql-connector.js",
+  "types": "./lib/src/sql-connector.d.ts",
   "dependencies": {
     "@types/ajv": "^1.0.0",
     "@types/cors": "^2.8.9",
