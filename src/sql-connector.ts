@@ -1,28 +1,17 @@
-import Knex from 'knex';
-import Resquel from 'resquel';
-import { SQLConnectorConfig, SQLConnectorRoute } from 'config';
-import { Request, Response } from 'express';
-import debugLib from 'debug';
-import fetch from 'node-fetch';
 import _, { Dictionary } from 'lodash';
-import cors from 'cors';
-import { v4 as uuid } from 'uuid';
 import Ajv, { DefinedError } from 'ajv';
 import CONFIG from '../schemas/config.json';
+import cors from 'cors';
+import fetch from 'node-fetch';
+import Knex from 'knex';
+import logger from './log';
+import Resquel from 'resquel';
+import { Request, Response } from 'express';
+import { SQLConnectorConfig, SQLConnectorRoute } from 'config';
+import { v4 as uuid } from 'uuid';
 const configSchema: Dictionary<unknown> = CONFIG;
 
-// 💥 Pay attention to these! 💥
-const error = debugLib('formio-sql:sql-connector:error');
-error.color = '1';
-// Higher priority messages
-const warn = debugLib('formio-sql:sql-connector:warn');
-warn.color = '3';
-// Status messages (responses and such)
-const log = debugLib('formio-sql:sql-connector:log');
-log.color = '2';
-// For logging out objects (responses and such)
-const debug = debugLib('formio-sql:sql-connector:debug');
-debug.color = '4';
+const { log, warn, debug, error } = logger('sql-connector');
 
 const sleep = (ms): Promise<void> =>
   new Promise((i) => setTimeout(() => i(), ms));
