@@ -3,6 +3,7 @@ import { PreparedQuery } from 'resquel';
 import SQLConnector from './sql-connector';
 import { Request, Response } from 'express';
 import { RequestInit } from 'node-fetch';
+import { AnyKindOfDictionary } from 'lodash';
 
 type QueryHandlerArgs = {
   knex: knex;
@@ -22,8 +23,11 @@ export declare type SQLConnectorRoute = {
   after?: (req: Request, res: Response, next: () => Promise<void>) => unknown;
 };
 
+// see schemas/config.json for json equiv
+// formats must be kept in sync or validation 💥
 export declare type SQLConnectorConfig = {
   app: {
+    cors?: AnyKindOfDictionary;
     port: number;
     formio: {
       key: string;
