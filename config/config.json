@@ -1,29 +1,28 @@
 {
   "$schema": "../schemas/config.json",
-  "port": 3000,
+  "app": {
+    "port": 3100,
+    "auth": {
+      "username": "optional",
+      "password": "optional"
+    },
+    "formio": {
+      "key": "bdp95AuzgRRCsJJIBprsDuQJJUp8vs",
+      "project": "https://test.programmable.work/dev-brnnpomdwmdchgx"
+    }
+  },
+
   "db": {
     "default": {
-      "type": "mysql",
-      "server": "localhost",
-      "port": 3306,
-      "user": "root",
-      "password": "password"
+      "client": "mysql",
+      "connection": {
+        "host": "localhost",
+        "user": "root",
+        "password": "password",
+        "database": "test"
+      }
     }
   },
-  "auth": {
-    "username": "optional",
-    "password": "optional"
-  },
-  "formio": {
-    "key": "required",
-    "project": "required"
-  },
-  "routes": [
-    {
-      "method": "delete",
-      "endpoint": "/:customerId",
-      "query": "SELECT * FROM customers WHERE id={{ params.customerId }}",
-      "db": "aaa"
-    }
-  ]
+
+  "routes": []
 }

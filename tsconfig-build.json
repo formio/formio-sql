@@ -11,14 +11,12 @@
     "outDir": "./lib",
     "baseUrl": "./src",
     "types": [
-      "node",
-      "mocha"
+      "node"
     ],
     "incremental": true
   },
   "include": [
-    "src",
-    "test"
+    "src"
   ],
   "exclude": [
     "lib"
