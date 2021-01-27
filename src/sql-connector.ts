@@ -1,4 +1,4 @@
-import _, { Dictionary } from 'lodash';
+import _, { AnyKindOfDictionary, Dictionary } from 'lodash';
 import Ajv, { DefinedError } from 'ajv';
 import CONFIG from '../schemas/config.json';
 import cors from 'cors';
@@ -16,7 +16,21 @@ const { log, warn, debug, error } = logger('sql-connector');
 const sleep = (ms): Promise<void> =>
   new Promise((i) => setTimeout(() => i(), ms));
 
+export declare interface ResLocals {
+  requestId?: string;
+  route?: SQLConnectorRoute;
+  queries?: {
+    queryString: string;
+    params: unknown[];
+    result: AnyKindOfDictionary[];
+  }[];
+  result: AnyKindOfDictionary[];
+  status?: number;
+}
+
 // Built to be extended and used as a class as well as a service
+// To use as a service, view example configuration in docker-compose.yaml
+// All environment variables listed there
 export class SQLConnector extends Resquel {
   protected knexConnections: Record<string, Knex> = {};
 
@@ -41,9 +55,10 @@ export class SQLConnector extends Resquel {
     const method = route.method.toLowerCase();
     log(`Adding route: ${method} ${route.endpoint}`);
     this.router[method](route.endpoint, async (req: Request, res: Response) => {
-      res.locals.requestId = req.query.requestId || uuid();
-      res.locals.route = route;
-      log(`${res.locals.requestId}] ${route.method} ${route.endpoint}`);
+      const locals = res.locals as ResLocals;
+      locals.requestId = (req.query.requestId || uuid()) as string;
+      locals.route = route;
+      log(`[${locals.requestId}] ${route.method} ${route.endpoint}`);
 
       await this.runHook(route, 'before', req, res);
 
@@ -53,17 +68,32 @@ export class SQLConnector extends Resquel {
       //
 
       const knexClient = await this.getKnex(route);
+      if (knexClient === null) {
+        // This should have really been caught in validation
+        // Did someone delete a connection post-init or something?
+        error(`knex client does not exist for ${route.db}`);
+        debug(route);
+        return;
+      }
       const result = await this.processRouteQuery(route.query, req, knexClient);
-      res.locals.result = result;
+      if (typeof result === 'number') {
+        this.sendError(
+          res,
+          'processRouteQuery failed, did you send all the needed args for the query? See error logs for details',
+          result,
+        );
+        return;
+      }
 
+      locals.result = result;
       await this.runHook(route, 'after', req, res);
 
       // Don't send responses if a route handler did
       if (res.writableEnded) {
-        log(`${res.locals.requestId}] Response sent by route hook`);
+        log(`[${locals.requestId}] Response sent by route hook`);
         return;
       }
-      log(`${res.locals.requestId}] Sending result`);
+      log(`[${locals.requestId}] Sending result`);
       this.sendResponse(res);
     });
   }
@@ -83,6 +113,7 @@ export class SQLConnector extends Resquel {
     log(`Connector init`);
     await this.configBuilder();
     await super.init();
+    this.validateConfig();
   }
 
   /**
@@ -147,16 +178,22 @@ export class SQLConnector extends Resquel {
       }
     }
 
+    if (this.config.app.auth) {
+      warn(`SQLConnector config defines app.auth`);
+    }
+
     // Step 3: Grab routes from formio project
     log(`Fetching routes from formio project`);
     const formioRoutes = await this.getFormRouteInfo();
-    debug(formioRoutes);
+    debug(JSON.stringify(formioRoutes, null, '  '));
     this.config.routes = [...this.config.routes, ...formioRoutes];
-    this.validateConfig();
   }
 
   protected createKnexConnections(): void {
     Object.keys(this.config.db).forEach((key) => {
+      warn(
+        `Creating knex connection for: ${key} (${this.config.db[key].client})`,
+      );
       this.knexConnections[key] = Knex(this.config.db[key]);
     });
   }
@@ -176,6 +213,7 @@ export class SQLConnector extends Resquel {
     req: Request,
     res: Response,
   ): Promise<void> {
+    const locals = res.locals as ResLocals;
     if (route[hook]) {
       return new Promise((done) => {
         let timeout: NodeJS.Timeout | true = true;
@@ -184,7 +222,7 @@ export class SQLConnector extends Resquel {
             done();
             timeout = null;
             error(
-              `${res.locals.requestId}] ERROR: route.${hook} took longer than ${
+              `[${locals.requestId}] ERROR: route.${hook} took longer than ${
                 SQLConnector.HOOK_TIMEOUT / 1000
               } seconds`,
             );
@@ -202,7 +240,7 @@ export class SQLConnector extends Resquel {
           // Well that's weird. You can update HOOK_TIMEOUT to modify
           //
           error(
-            `${res.locals.requestId}] route.${hook} returned, but after timeout expired`,
+            `[${locals.requestId}] route.${hook} returned, but after timeout expired`,
           );
         });
       });
@@ -223,7 +261,7 @@ export class SQLConnector extends Resquel {
       await sleep(5000);
     }
     try {
-      const url = `${this.config.app.formio.project}/sqlconnector`;
+      const url = `${this.config.app.formio.project}/sqlconnector?format=v2`;
       log(`Loading connector data from: ${url}`);
       const body = await fetch(url, {
         headers: {
@@ -239,15 +277,38 @@ export class SQLConnector extends Resquel {
 
   private validateConfig(): void | never {
     if (SQLConnector.BYPASS_CONFIG_VALIDATION) {
+      warn(`Config validation bypassed`);
       return;
     }
-    const ajv = new Ajv();
-    const validate = ajv.compile(configSchema);
-    if (validate(this.config)) {
-      return;
+    let validate;
+    try {
+      const ajv = new Ajv({
+        allowMatchingProperties: true,
+      });
+      validate = ajv.compile(configSchema);
+      if (validate(this.config)) {
+        const invalidRoutes = this.config.routes.filter((route) => {
+          if (typeof this.knexConnections[route.db] === 'undefined') {
+            error(`Unknown db: ${route.db}`);
+            error(route);
+            return true;
+          }
+          return false;
+        });
+        if (invalidRoutes.length !== 0) {
+          error(
+            `${invalidRoutes.length} routes refer to unregistered db connections`,
+          );
+          process.exit(0);
+        }
+        log(`Config passed validation`);
+        return;
+      }
+    } catch (err) {
+      error(err);
     }
     error('config failed validation!');
-    debug(this.config as SQLConnectorConfig);
+    debug(JSON.stringify(this.config as SQLConnectorConfig, null, '  '));
     debug(validate.errors as DefinedError[]);
     process.exit(0);
   }

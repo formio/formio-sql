@@ -3,6 +3,6 @@ LABEL  Form.io <support@form.io>
 
 WORKDIR /usr/src/app
 COPY package.json ./
-RUN yarn install; yarn build
+RUN yarn install
 
-CMD ["node", "dist/main"]
+CMD ["yarn", "start"]

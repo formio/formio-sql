@@ -44,15 +44,16 @@
   "devDependencies": {},
   "scripts": {
     "start": "ts-node src/index.ts",
-    "start:log": "DEBUG=formio-sql*,resquel* ts-node src/index.ts",
-    "clean": "rm -rf dist",
-    "build": "tsc",
+    "debug:start": "DEBUG=formio-sql*,resquel*,sql-connector* yarn start",
+    "clean": "rm -rf lib",
+    "build": "tsc -p tsconfig-build.json",
     "build:clean": "yarn clean; yarn build"
   },
   "keywords": [
     "resquel",
     "formio",
-    "sql"
+    "sql",
+    "sqlconnector"
   ],
   "author": "form.io",
   "license": "MIT"
