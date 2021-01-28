@@ -2,16 +2,11 @@
   "$schema": "../schemas/config.json",
   "app": {
     "port": 3100,
-    "auth": {
-      "username": "optional",
-      "password": "optional"
-    },
     "formio": {
-      "key": "--",
-      "project": "--"
+      "key": "ze6USvQycEvNUBMEziVfnMwZoQCI6Z",
+      "project": "https://test.programmable.work/brnnpomdwmdchgx"
     }
   },
-
   "db": {
     "default": {
       "client": "mysql",
@@ -23,6 +18,5 @@
       }
     }
   },
-
   "routes": []
 }
