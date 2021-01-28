@@ -11,7 +11,7 @@ const run = async () => {
   const connector = new SQLConnector(config);
   await connector.init();
   const app = express();
-  app.use(connector.router);
+  connector.attach(app);
 
   app.listen(config.app.port);
   warn(`Listening on ${config.app.port}`);

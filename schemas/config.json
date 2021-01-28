@@ -33,6 +33,11 @@
                 },
                 "project": {
                   "type": "string"
+                },
+                "routesResourceTag": {
+                  "type": "string",
+                  "description": "Link to a SQLConector Routes resource to import custom routes from",
+                  "default": "sqlconnector"
                 }
               }
             },

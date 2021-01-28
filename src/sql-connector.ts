@@ -1,20 +1,13 @@
-import _, { AnyKindOfDictionary, Dictionary } from 'lodash';
-import Ajv, { DefinedError } from 'ajv';
-import CONFIG from '../schemas/config.json';
+import Config, { SQLConnectorConfig, SQLConnectorRoute } from './config';
 import cors from 'cors';
-import fetch from 'node-fetch';
 import Knex from 'knex';
 import logger from './log';
 import Resquel from 'resquel';
+import { AnyKindOfDictionary } from 'lodash';
 import { Request, Response } from 'express';
-import { SQLConnectorConfig, SQLConnectorRoute } from './config';
+import express from 'express';
 import { v4 as uuid } from 'uuid';
-const configSchema: Dictionary<unknown> = CONFIG;
-
 const { log, warn, debug, error } = logger('sql-connector');
-
-const sleep = (ms): Promise<void> =>
-  new Promise((i) => setTimeout(() => i(), ms));
 
 export declare interface ResLocals {
   requestId?: string;
@@ -32,6 +25,9 @@ export declare interface ResLocals {
 // To use as a service, view example configuration in docker-compose.yaml
 // All environment variables listed there
 export class SQLConnector extends Resquel {
+  public static REFRESH_ROUTE = (
+    process.env.REFRESH_ROUTE || '/sqlconnector/refresh'
+  ).toString();
   protected knexConnections: Record<string, Knex> = {};
 
   // I tried to warn you!
@@ -44,8 +40,16 @@ export class SQLConnector extends Resquel {
     process.env.ROUTE_INFO_MAX_RETRIES || 50,
   );
 
-  constructor(private config: SQLConnectorConfig) {
+  public config: SQLConnectorConfig = null;
+
+  constructor(private sourceConfig: SQLConnectorConfig) {
     super(null);
+  }
+
+  public attach(app: express.Application) {
+    app.use((req, res, next) => {
+      this.router(req, res, next);
+    });
   }
 
   /**
@@ -109,102 +113,50 @@ export class SQLConnector extends Resquel {
     return this.knexConnections[connectionName] || null;
   }
 
+  // Calling init will remove the current db connections & router, then re-make them
+  // If providing routes from a resource, a webhook can be set up to automatically update the connector by calling the route
   public async init(): Promise<void> {
     log(`Connector init`);
-    await this.configBuilder();
+    await this.buildConfig();
     await super.init();
-    this.validateConfig();
+    warn(
+      `Call route to reload connector config: ${SQLConnector.REFRESH_ROUTE}`,
+    );
+    this.router.get(SQLConnector.REFRESH_ROUTE, (req, res) => {
+      warn('SQLConnector refresh');
+      res.send({
+        refresh: true,
+      });
+      this.init();
+    });
   }
 
-  /**
-   * Big expansion on Resquel implementation -
-   * This function is intended to replace `config.json` that is utilized w/ Resquel
-   *
-   * Configuration data from these sources are merged into a completed overall config:
-   * - config.json
-   * - environment variables
-   * - external config
-   *
-   * This function will be expanded in the future with more config sources
-   * If you have requests, send in an email to support@form.io
-   */
-  protected async configBuilder(): Promise<void> {
-    // Step 1: Merge environment variables into config
-    const mapping = {
-      // [environment variable]: 'config.object.path',
-      PORT: 'app.port',
-      FORMIO_KEY: 'app.formio.key',
-      FORMIO_PROJECT: 'app.formio.project',
-      AUTH_USERNAME: 'app.auth.username',
-      AUTH_PASSWORD: 'app.auth.password',
-      EXTERNAL_CONFIG: 'app.externalConfig.url',
-    };
-    Object.keys(mapping).forEach((key) => {
-      if (process.env[key] !== undefined) {
-        warn(`Using process.env.${key} value for ${mapping[key]}`);
-        _.set(this.config, mapping[key], process.env[key]);
-      }
-    });
-
-    // Step 2: If defined, pull in external config and merge
-    if (this.config.app.externalConfig) {
-      // When in doubt, external config takes priority
-      const external = this.config.app.externalConfig;
-      warn(`External config path provided`);
-      const response = await fetch(external.url, external.extra);
-      const externalConfig: SQLConnectorConfig = await response.json();
-      debug(externalConfig);
-
-      // app merging
-      if (externalConfig.app) {
-        this.config.app.cors = externalConfig.app.cors || this.config.app.cors;
-        this.config.app.auth = externalConfig.app.auth || this.config.app.auth;
-        this.config.app.formio =
-          externalConfig.app.formio || this.config.app.formio;
-        this.config.app.port = externalConfig.app.port || this.config.app.port;
-      }
-
-      // db merging
-      if (externalConfig.db) {
-        this.config.db = {
-          ...this.config.db,
-          ...externalConfig.db,
-        };
-      }
-
-      // routes merging
-      if (externalConfig.routes) {
-        this.config.routes = [...this.config.routes, ...externalConfig.routes];
-      }
-    }
-
-    if (this.config.app.auth) {
-      warn(`SQLConnector config defines app.auth`);
-    }
-
-    // Step 3: Grab routes from formio project
-    log(`Fetching routes from formio project`);
-    const formioRoutes = await this.getFormRouteInfo();
-    debug(JSON.stringify(formioRoutes, null, '  '));
-    this.config.routes = [...this.config.routes, ...formioRoutes];
+  protected async buildConfig(): Promise<void> {
+    const config = new Config(this.sourceConfig);
+    await config.build();
+    this.config = config.configData;
   }
 
   protected createKnexConnections(): void {
-    Object.keys(this.config.db).forEach((key) => {
+    if (Object.keys(this.knexConnections)) {
+      warn(`Purging old connections`);
+      this.knexConnections = {};
+    }
+    Object.keys(this.sourceConfig.db).forEach((key) => {
       warn(
-        `Creating knex connection for: ${key} (${this.config.db[key].client})`,
+        `Creating knex connection for: ${key} (${this.sourceConfig.db[key].client})`,
       );
-      this.knexConnections[key] = Knex(this.config.db[key]);
+      this.knexConnections[key] = Knex(this.sourceConfig.db[key]);
     });
   }
 
   protected loadRoutes(): void {
-    this.config.routes.forEach((route) => this.addRoute(route));
+    this.sourceConfig.routes.forEach((route) => this.addRoute(route));
   }
 
   protected routerSetup(): void {
-    super.routerSetup(this.config.app.auth);
-    this.router.use(cors(this.config.app.cors));
+    super.routerSetup(this.sourceConfig.app.auth);
+    this.router.use(cors(this.sourceConfig.app.cors));
   }
 
   protected async runHook(
@@ -245,72 +197,6 @@ export class SQLConnector extends Resquel {
         });
       });
     }
-  }
-
-  private async getFormRouteInfo(
-    failures = 0,
-  ): Promise<SQLConnectorRoute[]> | never {
-    if (failures > SQLConnector.ROUTE_INFO_MAX_RETRIES) {
-      error(
-        `MAX_RETRIES exceeded, verify formio-server is running and the project url is correct`,
-      );
-      process.exit(0);
-    }
-    if (failures > 0) {
-      log('sleep(5000)');
-      await sleep(5000);
-    }
-    try {
-      const url = `${this.config.app.formio.project}/sqlconnector?format=v2`;
-      log(`Loading connector data from: ${url}`);
-      const body = await fetch(url, {
-        headers: {
-          'x-token': this.config.app.formio.key,
-        },
-      });
-      return body.json();
-    } catch (err) {
-      error(`Failed to pull formio sqlconnector info %O`, err);
-      return this.getFormRouteInfo(failures + 1);
-    }
-  }
-
-  private validateConfig(): void | never {
-    if (SQLConnector.BYPASS_CONFIG_VALIDATION) {
-      warn(`Config validation bypassed`);
-      return;
-    }
-    let validate;
-    try {
-      const ajv = new Ajv({
-        allowMatchingProperties: true,
-      });
-      validate = ajv.compile(configSchema);
-      if (validate(this.config)) {
-        const invalidRoutes = this.config.routes.filter((route) => {
-          if (typeof this.knexConnections[route.db] === 'undefined') {
-            error(`Unknown db: ${route.db}`);
-            error(route);
-            return true;
-          }
-          return false;
-        });
-        if (invalidRoutes.length !== 0) {
-          error(
-            `${invalidRoutes.length} routes refer to unregistered db connections`,
-          );
-          process.exit(0);
-        }
-        log(`Config passed validation`);
-        return;
-      }
-    } catch (err) {
-      error(err);
-    }
-    error('config failed validation!');
-    debug(JSON.stringify(this.config as SQLConnectorConfig, null, '  '));
-    debug(validate.errors as DefinedError[]);
-    process.exit(0);
   }
 }
 export default SQLConnector;
