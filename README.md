@@ -6,73 +6,64 @@ are dynamically generated along with the SQL code to allow you to create forms i
 the contents automatically inserted into your SQL Database using field mapping within the SQL Connector Form Action.
 Please go to https://form.io to learn more.
 
-**This library currently supports Microsoft SQL Server, MySQL, and PostgreSQL.**
+**This library currently is validated with Microsoft SQL Server, MySQL, and PostgreSQL. See [docker-compose.yaml](docker-compose.yaml) for specific configurations used in testing**
 
 # Getting Started
-To get started with a new formio-sql server:
+## Dockerized
+View [docker-compose.yaml](docker-compose.yaml) for example setup, and the most up to date list of environment variables. Running this repo as a container is the intended way to use this.
 
- 1. Clone this repo
- 2. Copy the contents of `.env.example` to `.env`
- 3. Update the contents of `TYPE`, `DB_SERVER`, `DB_USER`, `DB_DATABASE` to match your SQL instance.
- 4. Select the `PORT` you want to run your `formio-sql` instance on
- 5. Create a API Key on your Form.io Project for the `FORMIO_KEY`
- 6. Add your project domain to the `FORMIO_PROJECT`
- 7. Configure your Form.io Project settings, to have a SQL Connector Data Connection
+## Local
+1. Clone repo
+2. Modify [config.json](config/config.json) or [.env](.env) to meet your needs.
+
+**Note:** The config is subject to automated validation, and server will quit if invalid. This functionality can be disabled with environment variables if you like living on the edge. If your editor has json schema support (like VSCode), config validation is done directly in IDE for convenience.
+
+3. `yarn install`
+4. Configure your Form.io Project Settings, to have a SQL Connector Data Connection (**Integrations** > **Data Connections**, `http(s)` scheme must be included on **Host URL** field)
  ![](/formio-sql1.png)
- 8. Configure a Form to have the SQL Connector action, and configure the mappings
+5. Configure a Form to have the SQL Connector action, and configure the mappings
  ![](/formio-sql2.png)
- 9. Start your formio-sql server, which will dynamically connect your server to your Form.io Forms, so all submissions
-    will be stored in your connected database.
+6. `yarn start` (`yarn debug:start` to include all log messages)
+
+## Extending
+SQLConnector and [Resquel](https://github.com/formio/resquel) are built to be extended should you require more customized logic. Adding additional logic is this easy
+```typescript
+import SQLConnector from 'formio-sql';
+
+export class MyCustomConnector extends SQLConnector {
+  public async init() {
+    await super.init();
+    this.config.routes.forEach((route) => {
+      route.before = async (req, res, next) => {
+        console.log('I run before the queries!');
+        next();
+      };
+    });
+  }
+}
+```
+
 
 # Requirements
-The following items are required to use the formio-sql server.
+The following items are required to use the **formio-sql** server.
 
  1. A Form.io Project on the Team Pro or Commercial Plan
- 2. A Node.js LTS Server, 4.x.x
- 3. A MySQL/Microsoft SQL/PostgreSQL server (only one)
+ 2. A Node.js LTS Server, `4.x.x` or higher
+ 3. A MySQL/Microsoft SQL/PostgreSQL compatible server(s)
 
-## Extra
-All the settings of this library are controlled via environment variables, which may be manually added to the start
-command, e.g. `SETTING=something npm start`, or you can configure the `.env` file. To configure the `.env` file, copy
-the `.env.example` file to `.env` and add your settings.
-
-## Settings
-| Setting | Default | Required | Purpose |
-|---------|---------|----------|---------|
-| PORT | 3000 | yes | The port this express server will run on. |
-| TYPE | mysql | yes | The type of SQL syntax to use (mysql, mssql, postgresql). |
-| DB_SERVER | localhost | yes | The SQL database host to use. |
-| DB_PORT | | no | The SQL database Port to use. |
-| DB_USER | root | no | The SQL database user to use. |
-| DB_PASSWORD | | no | The SQL database password to use. |
-| DB_DATABASE | formiosql | yes | The SQL database user to use. |
-| FORMIO_KEY | | yes | The API key for your Form.io Project. |
-| FORMIO_PROJECT | | yes | The Project API endpoint for your Form.io Project. |
-| AUTH_USERNAME | | no | A Random username required to access this Server for Basic Auth, also used in the Form.io Project settings for SQL Connector. |
-| AUTH_PASSWORD | | no | A Random password required to access this Server for Basic Auth, also used in the Form.io Project settings for SQL Connector. |
-| LEGACY | | no | Override legacy support. Useful if you don't make a config.json file, and don't want to use defaults.json |
-
-## Backwards Compatibility
-This library originally used a defaults.json file. That has been deprecated in favor of config.json. You can copy use
-config.json.example as a template, and add/remove any settings you want.
-
-The db settings in config.json are used as a template, so any additional database settings will be passed on to the
-underlying libraries for extended functionality.
-
-If you want don't want to create a config.json, it is recommended that you add the env variable LEGACY=false, to force
-the settings logic to use the expanded functionality.
+## Compatibility
+Version `1.0.0` drops backwards compatibility for `0.1.0` and prior. The move to a prepared query format instead of simple string substitutions fundamentally breaks existing route definitions.
 
 ## Routes
-The routes are primarily generated on Form.io, but can also be added manually. Adding custom routes to `routes.json`
-will overwrite Form.io generated routes.
+The routes are primarily generated on Form.io, but can also be added manually. These are now defined in [config.json](config/config.json)
 
 ## How it works
-Upon running the formio-sql server, it will authenticate to your Form.io project and grab all the generated SQL
-Connector routes, so anytime the SQLConnector action is changed on Form.io, this server will need to be restarted to get
-the updated routes.
+When this service starts, it will automatically connect to your Form.io project and load the generated SQL Connector Routes.
+
+⚠️ **NOTE**: Anytime the SQLConnector Action is modified on Form.io, this service will need to be restarted stay in sync. ⚠️
 
 If you are not using a Form.io project, check out [Resquel](https://github.com/formio/resquel).
 
 Enjoy!
 
- - The Form.io Team
+ - The [Form.io](https://form.io) Team

@@ -1,0 +1,86 @@
+---
+version: 2
+
+network:
+  sqlconnector:
+
+services:
+  formio-sql:
+    image: formio/formio-sql:1.0.0
+    container_name: formio-sql
+    environment:
+      # Enable all local logs, filter out debugging messages
+      - DEBUG=formio-sql*,resquel*,sql-connector*,-*log,-*debug
+
+      - FORMIO_KEY=....
+      - FORMIO_PROJECT=https://example.formio.server/:projectId # AKA: "Live Endpoint"
+
+      # Don't forget to match these in your project settings
+      - AUTH_USERNAME=optional
+      - AUTH_PASSWORD=optional
+
+
+      - DEFAULT_DB_CLIENT=mysql
+      - DEFAULT_DB_CONNECTION={"host": "localhost","user": "root","password": "password","database": "test"}
+
+      # Request the config from url. Takes priority over local config.json & environment vars
+      # - EXTERNAL_CONFIG=https://some.url/config.json
+
+      # Danger zone
+      # - BYPASS_CONFIG_VALIDATION=true
+
+      # Are your route hooks the long running sort? -1 disables
+      # - HOOK_TIMEOUT=30000
+
+      # Verify formio-server is running and the project url is correct first
+      # - ROUTE_INFO_MAX_RETRIES=50
+      # - PORT=3100 # You probably want the ports section below
+
+
+    volumes:
+      # - /dir/containing/config.json:/usr/src/app/config
+    ports:
+      # "external:internal"
+      - "3100:3100"
+    networks:
+      - sqlconnector
+    restart: unless-stopped
+
+
+  # Need some databases for testing?
+  # mariadb:
+  #   image: mariadb:latest
+  #   container_name: mariadb
+  #   command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+  #   restart: unless-stopped
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=password
+  #   ports:
+  #     - "3306:3306"
+  #   networks:
+  #     - sqlconnector
+
+  # postgres:
+  #   image: postgres
+  #   container_name: postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     - POSTGRES_DB=postgres
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - sqlconnector
+
+  # mssql:
+  #   image: mcr.microsoft.com/mssql/server:2017-latest
+  #   container_name: mssql
+  #   restart: unless-stopped
+  #   environment:
+  #     - SA_PASSWORD=yourStrong(!)Password
+  #     - ACCEPT_EULA=Y
+  #   ports:
+  #     - "1433:1433"
+  #   networks:
+  #     - sqlconnector

@@ -2,6 +2,8 @@
 .idea
 .env
 routes.json
+/yarn.lock
+dist
 
 # Created by https://www.gitignore.io/api/windows,osx,linux,node,webstorm
 
@@ -162,3 +164,5 @@ fabric.properties
 # modules.xml
 # .idea/misc.xml
 # *.ipr
+
+lib/
