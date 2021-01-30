@@ -37,7 +37,12 @@
                 "routesResourceTag": {
                   "type": "string",
                   "description": "Link to a SQLConector Routes resource to import custom routes from",
-                  "default": "sqlconnector"
+                  "default": "sqlconnector,routes"
+                },
+                "dbResourceTag": {
+                  "type": "string",
+                  "description": "Link to a SQLConector Routes resource to import custom routes from",
+                  "default": "sqlconnector,databases"
                 }
               }
             },
@@ -166,7 +171,7 @@
         }
       },
       "required": [
-        "client", "connection"
+        "client"
       ]
     }
   }

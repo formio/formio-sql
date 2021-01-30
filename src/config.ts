@@ -8,6 +8,7 @@ import SQLConnector from './sql-connector';
 import { AnyKindOfDictionary, Dictionary } from 'lodash';
 import { PreparedQuery } from 'resquel';
 import { Request, Response } from 'express';
+import dotenv from 'dotenv';
 
 type QueryHandlerArgs = {
   knex: knex;
@@ -28,6 +29,8 @@ export declare type SQLConnectorRoute = {
   after?: (req: Request, res: Response, next: () => Promise<void>) => unknown;
 };
 
+type DB_Config = { [key: string]: knex.Config<unknown> };
+
 // see schemas/config.json for json equiv
 // formats must be kept in sync or validation 💥
 export declare type SQLConnectorConfig = {
@@ -38,6 +41,7 @@ export declare type SQLConnectorConfig = {
       key: string;
       project: string;
       routesResourceTag?: string;
+      dbResourceTag?: string;
     };
     auth?: {
       username: string;
@@ -68,7 +72,7 @@ const configSchema: Dictionary<unknown> = CONFIG;
 
 const sleep = (ms): Promise<void> =>
   new Promise((i) => setTimeout(() => i(), ms));
-const { log, warn, debug, error } = logger('sql-connector');
+const { log, warn, debug, error } = logger('config');
 
 export class Config {
   constructor(public configData: SQLConnectorConfig) {}
@@ -96,12 +100,22 @@ export class Config {
       AUTH_USERNAME: 'app.auth.username',
       AUTH_PASSWORD: 'app.auth.password',
       EXTERNAL_CONFIG: 'app.externalConfig.url',
-      ROUTES_RESOURCE: 'app.formio.routeResource',
+      ROUTES_RESOURCE: 'app.formio.routesResourceTag',
+      DB_RESOURCE: 'app.formio.dbResourceTag',
+      DEFAULT_DB_CLIENT: 'app.db.default.client',
+      DEFAULT_DB_CONNECTION: 'app.db.default.connection',
     };
+    dotenv.config();
     Object.keys(mapping).forEach((key) => {
       if (process.env[key] !== undefined) {
         warn(`Using process.env.${key} value for ${mapping[key]}`);
-        _.set(this.configData, mapping[key], process.env[key]);
+        switch (key) {
+          case 'DEFAULT_DB_CONNECTION':
+            _.set(this.configData, mapping[key], JSON.parse(process.env[key]));
+            return;
+          default:
+            _.set(this.configData, mapping[key], process.env[key]);
+        }
       }
     });
 
@@ -154,7 +168,11 @@ export class Config {
     log(`Fetching routes from formio project`);
     const formioRoutes = await this.getFormRouteInfo();
     log(`Fetching custom routes`);
-    const customRoutes = await this.fetchFromConnectorResource();
+    const { customRoutes, dbConfig } = await this.fetchFromConnectorResource();
+    this.configData.db = {
+      ...this.configData.db,
+      ...dbConfig,
+    };
     this.configData.routes = [
       ...this.configData.routes,
       ...formioRoutes,
@@ -236,7 +254,10 @@ export class Config {
   // Look up all resources that are tagged with the sqlconnector tag
   // This tag can be changed via config settings
   private async fetchFromConnectorResource():
-    | Promise<SQLConnectorRoute[]>
+    | Promise<{
+        customRoutes: SQLConnectorRoute[];
+        dbConfig: DB_Config;
+      }>
     | never {
     const project = this.configData.app.formio.project;
     try {
@@ -246,42 +267,92 @@ export class Config {
       const res = await fetch(url);
       const data = await res.json();
       // debug(data);
-      const forms = data.filter((form) => {
-        // split on comma, and be sure all tags are present
-        const tags = (
-          this.configData.app.formio.routesResourceTag || 'sqlconnector'
-        ).split(',');
-        return tags.every((t) => form.tags.includes(t));
-      });
-      const out: SQLConnectorRoute[] = [];
-      await Promise.all(
-        forms.map(async (form) => {
-          const url = `${project}/${form.path}/submission`;
-          log(url);
-          const result = await fetch(url, {
-            headers: {
-              'x-token': this.configData.app.formio.key,
-            },
-          });
-          const submissions = await result.json();
-          submissions.forEach((submission) => {
-            const routeInfo = submission.data;
-            out.push({
-              method: routeInfo.method,
-              endpoint: routeInfo.endpoint,
-              db: routeInfo.db || 'default',
-              query: this.prepareQuery(routeInfo.query),
-            });
-          });
-          debug(out);
-        }),
-      );
-      return out;
+
+      return {
+        customRoutes: await this.loadRoutes(project, data),
+        dbConfig: await this.loadDb(project, data),
+      };
     } catch (err) {
       error(`Request failed`);
       error(err);
       process.exit();
     }
+  }
+
+  private async loadRoutes(
+    project: string,
+    data: { tags: string[]; path: string }[],
+  ) {
+    const connectorRoutesForms = data.filter((form) => {
+      // split on comma, and be sure all tags are present
+      const tags = (
+        this.configData.app.formio.routesResourceTag || 'sqlconnector,routes'
+      ).split(',');
+      return tags.every((t) => form.tags.includes(t));
+    });
+    const out: SQLConnectorRoute[] = [];
+    await Promise.all(
+      connectorRoutesForms.map(async (form) => {
+        const url = `${project}/${form.path}/submission`;
+        log(url);
+        const result = await fetch(url, {
+          headers: {
+            'x-token': this.configData.app.formio.key,
+          },
+        });
+        const submissions = await result.json();
+        submissions.forEach((submission) => {
+          const routeInfo = submission.data;
+          out.push({
+            method: routeInfo.method,
+            endpoint: routeInfo.endpoint,
+            db: routeInfo.db || 'default',
+            query: this.prepareQuery(routeInfo.query),
+          });
+        });
+      }),
+    );
+    debug(out);
+    return out;
+  }
+
+  private async loadDb(
+    project: string,
+    data: { tags: string[]; path: string }[],
+  ): Promise<DB_Config> {
+    const connectorRoutesForms = data.filter((form) => {
+      // split on comma, and be sure all tags are present
+      const tags = (
+        this.configData.app.formio.dbResourceTag || 'sqlconnector,databases'
+      ).split(',');
+      return tags.every((t) => form.tags.includes(t));
+    });
+    const out: DB_Config = {};
+    await Promise.all(
+      connectorRoutesForms.map(async (form) => {
+        const url = `${project}/${form.path}/submission`;
+        log(url);
+        const result = await fetch(url, {
+          headers: {
+            'x-token': this.configData.app.formio.key,
+          },
+        });
+        const submissions = await result.json();
+        submissions.forEach((submission) => {
+          const dbInfo = submission.data;
+          if (dbInfo.raw) {
+            out[dbInfo.name] = JSON.parse(dbInfo.raw);
+            return;
+          }
+          out[dbInfo.name] = {
+            client: dbInfo.client,
+            connection: JSON.parse(dbInfo.connection),
+          };
+        });
+      }),
+    );
+    debug(out);
+    return out;
   }
 
   // Modify the query format

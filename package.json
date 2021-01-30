@@ -23,6 +23,7 @@
     "ajv": "^7.0.3",
     "cors": "^2.8.5",
     "debug": "^4.3.1",
+    "dotenv": "^8.2.0",
     "eslint": "^7.18.0",
     "eslint-config-prettier": "^7.2.0",
     "express": "^4.17.1",
@@ -36,7 +37,7 @@
     "node-fetch": "^2.6.1",
     "pg": "^8.5.1",
     "prettier": "^2.2.1",
-    "resquel": "formio/resquel",
+    "resquel": "git://github.com/formio/resquel.git#v2.0.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.3",
     "uuid": "^8.3.2"
@@ -46,8 +47,9 @@
     "start": "ts-node src/index.ts",
     "debug:start": "DEBUG=formio-sql*,resquel*,sql-connector* yarn start",
     "clean": "rm -rf lib",
-    "build": "docker build --no-cache -t formio/formio-sql:latest -f deployment/docker/Dockerfile .",
-    "build:clean": "yarn clean; yarn build"
+    "docker": "docker build --no-cache -t formio/formio-sql:latest -f deployment/docker/Dockerfile .",
+    "build": "tsc -p tsconfig-build.json",
+    "prepare": "yarn build"
   },
   "keywords": [
     "resquel",

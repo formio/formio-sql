@@ -13,7 +13,8 @@ const run = async () => {
   const app = express();
   connector.attach(app);
 
-  app.listen(config.app.port);
-  warn(`Listening on ${config.app.port}`);
+  const port = config.app.port || 3100;
+  app.listen(port);
+  warn(`Listening on ${port}`);
 };
 run();

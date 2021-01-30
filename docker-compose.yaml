@@ -12,13 +12,16 @@ services:
       # Enable all local logs, filter out debugging messages
       - DEBUG=formio-sql*,resquel*,sql-connector*,-*log,-*debug
 
-      # - PORT=3100 # You probably want the ports section below
-      # - FORMIO_KEY=....
-      # - FORMIO_PROJECT=https://example.formio.server/:projectId # AKA: "Live Endpoint"
+      - FORMIO_KEY=....
+      - FORMIO_PROJECT=https://example.formio.server/:projectId # AKA: "Live Endpoint"
 
       # Don't forget to match these in your project settings
-      # - AUTH_USERNAME=optional
-      # - AUTH_PASSWORD=optional
+      - AUTH_USERNAME=optional
+      - AUTH_PASSWORD=optional
+
+
+      - DEFAULT_DB_CLIENT=mysql
+      - DEFAULT_DB_CONNECTION={"host": "localhost","user": "root","password": "password","database": "test"}
 
       # Request the config from url. Takes priority over local config.json & environment vars
       # - EXTERNAL_CONFIG=https://some.url/config.json
@@ -31,6 +34,9 @@ services:
 
       # Verify formio-server is running and the project url is correct first
       # - ROUTE_INFO_MAX_RETRIES=50
+      # - PORT=3100 # You probably want the ports section below
+
+
     volumes:
       # - /dir/containing/config.json:/usr/src/app/config
     ports:
