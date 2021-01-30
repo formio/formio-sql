@@ -8,6 +8,9 @@ Please go to https://form.io to learn more.
 
 **This library currently is validated with Microsoft SQL Server, MySQL, and PostgreSQL. See [docker-compose.yaml](docker-compose.yaml) for specific configurations used in testing**
 
+# Official Documentation
+More in-depth documentation for configuring your SQLConnector can be found [found here](https://form-io.gitbook.io/help/developers/sql-connector/)
+
 # Getting Started
 ## Dockerized
 View [docker-compose.yaml](docker-compose.yaml) for example setup, and the most up to date list of environment variables. Running this repo as a container is the intended way to use this.
