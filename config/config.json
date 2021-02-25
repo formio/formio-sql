@@ -3,8 +3,8 @@
   "app": {
     "port": 3100,
     "formio": {
-      "key": "ze6USvQycEvNUBMEziVfnMwZoQCI6Z",
-      "project": "https://test.programmable.work/brnnpomdwmdchgx"
+      "key": "",
+      "project": ""
     }
   },
   "db": {
